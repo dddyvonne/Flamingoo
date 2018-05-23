@@ -16,8 +16,8 @@ library(V8)
 library(readxl)
 #cat("\014")
 
-news <- read_excel("~/Desktop/daily News .xlsx")
-twitter <- read_excel("~/Desktop/dailyTwitter.xlsx")
+news <- read_excel("~/data/daily News .xlsx")
+twitter <- read_excel("~/data/dailyTwitter.xlsx")
 twitter <- data.frame(twitter)
 
 b <- gsub(".*www.", "", news$Link, perl = TRUE)
