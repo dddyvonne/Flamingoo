@@ -16,8 +16,8 @@ library(V8)
 library(readxl)
 #cat("\014")
 
-news <- read_excel("~/Desktop/daily News .xlsx")
-twitter <- read_excel("~/Desktop/dailyTwitter.xlsx")
+news <- read_excel("data/dailyNews.xlsx")
+twitter <- read_excel("data/dailyTwitter.xlsx")
 twitter <- data.frame(twitter)
 
 b <- gsub(".*www.", "", news$Link, perl = TRUE)
@@ -109,7 +109,7 @@ news_view<- tabPanel(
       tags$h3("Publications")
     ),
     fluidRow(
-      DT::dataTableOutput("table")
+      tags$div(class = "news_table",DT::dataTableOutput("table"))
     )
     
   )
@@ -127,7 +127,7 @@ social_view<- tabPanel(
       tags$h3("Trending Tweets (Over Last 3 Days)")
     ),
     fluidRow(
-      DT::dataTableOutput("table2")
+      tags$div(class = "social_table",DT::dataTableOutput("table2"))
     )
     
   )

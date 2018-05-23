@@ -110,6 +110,7 @@ tr.odd {
   background-color: #F5F7FA !important;
 }
 
+
 .container-fluid > .col-sm-3 {
   position: fixed;
   height: 100%;
@@ -242,7 +243,8 @@ img.interest {
 }
 
 
-.col-sm-8 tbody tr td:nth-child(4){
+.news-table tbody tr td:nth-child(4),
+.social-table tbody tr td:nth-child(4){
   width: 55% !important;
 }
 
