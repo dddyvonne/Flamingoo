@@ -16,10 +16,10 @@ library(V8)
 library(readxl)
 #cat("\014")
 
-news <- read_excel("data/dailyNews.xlsx")
-twitter <- read_excel("data/dailyTwitter.xlsx")
-
+news <- read_excel("~/Desktop/daily News .xlsx")
+twitter <- read_excel("~/Desktop/dailyTwitter.xlsx")
 twitter <- data.frame(twitter)
+hashtags <- fread("~/Desktop/Trending Hashtags.csv")
 
 b <- gsub(".*www.", "", news$Link, perl = TRUE)
 test <- urltools::url_parse(b)$domain
@@ -83,7 +83,7 @@ header <- fluidRow(
 
 categories <- sort(unique(news$Category))
 categories_social <- sort(unique(twitter$Category))
-
+categories_hashtag <- sort(unique(hashtags$Category))
 
 themes <- c('Healthcare',
             'Hold Government Officials Accountable',
@@ -110,7 +110,7 @@ news_view<- tabPanel(
       tags$h3("Publications")
     ),
     fluidRow(
-      tags$div(class = "news_table",DT::dataTableOutput("table"))
+      DT::dataTableOutput("table")
     )
     
   )
@@ -128,7 +128,10 @@ social_view<- tabPanel(
       tags$h3("Trending Tweets (Over Last 3 Days)")
     ),
     fluidRow(
-      tags$div(class = "social_table",DT::dataTableOutput("table2"))
+      DT::dataTableOutput("table2")
+    ),
+    fluidRow(
+      highchartOutput("charttest")
     )
     
   )
@@ -234,8 +237,11 @@ ui <- fluidPage(
       #tags$div(class='cbx interest',checkboxInput('interestCheck','Show',TRUE)),
      tags$div(class = "input-news",selectInput("categories","Category:",c("All Categories" = "all_categories", categories))),
      tags$div(class = "input-social",selectInput("categories_social","Category:",c("All Categories" = "all_categories", categories_social))),
+     #tags$div(class = "input-social",selectInput("categories_social","Category:",c("All Categories" = "all_categories", categories_social))),
       #tags$div(class='cbx date',checkboxInput('dateCheck','Show',FALSE)),
-      dateRangeInput('dateRange', label = 'Select Date Range:',start = min(news$Date, twitter$Date), end = max(news$Date,twitter$Date))
+     dateRangeInput('dateRange', label = 'Select Date Range:',start = min(news$Date, twitter$Date), end = max(news$Date,twitter$Date))
+     #downloadButton("downloadData", "Download")
+     
   ),
   column(9,
     navbarPage("",position = "fixed-top",
@@ -269,8 +275,22 @@ makePlotlyChart <- function(dt,dates,channel,interest,theme) {
     p
 }
 
-makeHighChart <- function(){
-    #add function here
+makeHighChart <- function(dt,dates,cats){
+  s <- dt[(dt$Date >= dates[1]) & (dt$Date <= dates[2]),]
+  if (cats != "all_categories") {s <- s[s$Category == cats,]}
+  s <- s[,c('Date', 'Category', 'HashTag','Mentions')][, j=list(Mentions = sum(Mentions)), by = c('HashTag', 'Category')]
+  s <- s[order(s$Mentions, decreasing = TRUE),]
+  s <- s[1:10,]
+  #s <- dcast(s, Date ~ Category, fun = sum )
+  hc2 <- highchart() %>%
+    hc_title(text = "Trending Hashtags") %>% 
+    hc_subtitle(text = "Source: Sysomos") %>% 
+    hc_chart(type = "bar") %>% 
+    hc_xAxis(categories = c(s$HashTag)) %>% 
+    hc_add_series(name = "Mentions", data = (s$Mentions))
+  
+  hc2
+  
 }
 
 ####FUNCTION TO MAKE TABLES WITH DYNAMIC INPUT
@@ -287,7 +307,7 @@ makeTable <- function(dt,dims,dates,cats){
    # s <- s[,c(dims,metrics),with=FALSE]  #[,j=list(Reach=sum(Reach)),by=dims]
     #s <- s[,lapply(.SD,sum),by=dims]
    # s$`Amount Spent` <- dollar_format()(s$`Amount Spent`)
-    s
+    s 
   }, escape = FALSE)  
 }
 
@@ -300,6 +320,16 @@ server <- function(input, output){
   output$table2 <- renderDT(
     makeTable(twitter,c('Date','Category','Content','Link', "Retweets"),input$dateRange,input$categories_social), 
     escape = FALSE)
+  output$charttest <- renderHighchart(
+    makeHighChart(hashtags, input$dateRange, input$categories_social)
+  )
+  
+  #output$chart <- renderHighchart(hc2)
+    content = function(file) {
+      write.csv(var(), file, row.names = FALSE)
+    }
+
+  
  # output$chart1 <- renderPlotly(
   #  makePlotlyChart(sample,input$dateRange,input$channel,input$interest,input$theme)
   #)
